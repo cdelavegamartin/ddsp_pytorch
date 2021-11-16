@@ -18,5 +18,6 @@ model:
   block_size: *blocksize
 
 train:
+  sequential: yes
   scales: [4096, 2048, 1024, 512, 256, 128]
   overlap: .75
