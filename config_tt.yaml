@@ -1,0 +1,23 @@
+data:
+  data_location: ./dataset_timbretransfer/
+  extension: "wav"
+
+preprocess:
+  sampling_rate: &samplingrate 16000
+  signal_length: &signallength 512000
+  block_size: &blocksize 128 # must be a power of 2 if using realtime
+
+  oneshot: false # crop every audio file to exactly signal length
+  out_dir: ./preprocessed_tt/
+
+model:
+  hidden_size: 512
+  n_harmonic: 100
+  n_bands: 65
+  sampling_rate: *samplingrate
+  block_size: *blocksize
+
+train:
+  sequential: yes
+  scales: [4096, 2048, 1024, 512, 256, 128]
+  overlap: .75

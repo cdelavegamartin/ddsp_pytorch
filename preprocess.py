@@ -54,7 +54,7 @@ class Dataset(torch.utils.data.Dataset):
 
 def main():
     class args(Config):
-        CONFIG = "config.yaml"
+        CONFIG = "config_tt.yaml"
 
     args.parse_args()
     with open(args.CONFIG, "r") as config:

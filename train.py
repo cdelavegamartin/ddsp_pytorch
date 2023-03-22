@@ -134,9 +134,60 @@ def test(model,dataloader):
             )
         break
 
+def transfer(model,dataloader):
+    best_loss = float("inf")
+    mean_loss = 0
+    n_element = 0
+    
+    model.load_state_dict(torch.load(path.join(args.ROOT, "debug", "state.pth")))
+    model.eval()
+    # sound pitch loudness
+    for s, p, l in dataloader:
+        with torch.no_grad():
+            s = s.to(device)
+            p = p.unsqueeze(-1).to(device)
+            l = l.unsqueeze(-1).to(device)
+            # s torch.Size([16, 64000]) - p torch.Size([16, 400, 1]) - l torch.Size([16, 400, 1])
+            l = (l - mean_loudness) / std_loudness
+
+            y,h,n = model(p, l)
+            y = y.squeeze(-1)
+            h = h.squeeze(-1)
+            n = n.squeeze(-1)
+
+            n_element += 1
+
+            
+            ref = s.reshape(-1).detach().cpu().numpy()
+            synth = y.reshape(-1).detach().cpu().numpy()
+            harmonic = h.reshape(-1).detach().cpu().numpy()
+            noise = n.reshape(-1).detach().cpu().numpy()
+
+            sf.write(
+                path.join(args.ROOT, args.NAME, f"test_ref.wav"),
+                ref,
+                config["preprocess"]["sampling_rate"],
+            )
+            sf.write(
+                path.join(args.ROOT, args.NAME, f"test_synth.wav"),
+                synth,
+                config["preprocess"]["sampling_rate"],
+            )
+            sf.write(
+                path.join(args.ROOT, args.NAME, f"test_synth_harmonic.wav"),
+                harmonic,
+                config["preprocess"]["sampling_rate"],
+            )
+            sf.write(
+                path.join(args.ROOT, args.NAME, f"test_synth_noise.wav"),
+                noise,
+                config["preprocess"]["sampling_rate"],
+            )
+        break
+
 class args(Config):
     CONFIG = "config.yaml"
-    NAME = "debug"
+    NAME = "long_training"
     ROOT = "runs"
     STEPS = 500000
     BATCH = 16
@@ -197,5 +248,7 @@ epochs = int(np.ceil(args.STEPS / len(dataloader)))
 
 if args.MODE == "train":
     train(model,epochs,dataloader,writer,opt)
-else:
+elif args.MODE == "test":
     test(model,dataloader)
+elif args.MODE == "transfer":
+    transfer(model,dataloader)
